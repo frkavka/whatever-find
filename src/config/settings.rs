@@ -52,7 +52,7 @@ impl ConfigManager {
         let config_dir = dirs::config_dir().ok_or_else(|| {
             crate::error::FileSearchError::invalid_config("Could not determine config directory")
         })?;
-        Ok(config_dir.join("file-search").join("config.json"))
+        Ok(config_dir.join("whatever-find").join("config.json"))
     }
 }
 
