@@ -1,25 +1,33 @@
+/// Pattern matching implementations
 pub mod matcher;
 
 use crate::config::Config;
 use crate::indexer::FileIndex;
-use std::path::PathBuf;
-use regex::Regex;
 use crate::Result;
 use glob::Pattern;
+use regex::Regex;
+use std::path::PathBuf;
 
+/// Search modes supported by the search engine
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SearchMode {
+    /// Simple substring matching
     Substring,
+    /// Shell-style glob patterns with wildcards
     Glob,
+    /// Full regular expression support
     Regex,
+    /// Fuzzy matching with typo tolerance
     Fuzzy,
 }
 
+/// Search engine that supports multiple search modes and automatic pattern detection
 pub struct SearchEngine {
     config: Config,
 }
 
 impl SearchEngine {
+    /// Create a new search engine with the given configuration
     pub fn new(config: Config) -> Self {
         Self { config }
     }
@@ -73,8 +81,7 @@ impl SearchEngine {
         }
 
         // Check for quantifiers with braces
-        if query.contains('{') && query.contains('}') && 
-           query.chars().any(|c| c.is_ascii_digit()) {
+        if query.contains('{') && query.contains('}') && query.chars().any(|c| c.is_ascii_digit()) {
             return true;
         }
 
@@ -110,8 +117,10 @@ impl SearchEngine {
         // Simple heuristics for glob vs regex with wildcards
         // Globs usually have simpler patterns
         let has_glob_chars = query.contains('*') || query.contains('?');
-        let has_complex_regex = query.contains('[') || query.contains('(') || 
-                                query.contains('\\') || query.contains('|');
+        let has_complex_regex = query.contains('[')
+            || query.contains('(')
+            || query.contains('\\')
+            || query.contains('|');
 
         has_glob_chars && !has_complex_regex
     }
@@ -119,28 +128,41 @@ impl SearchEngine {
     /// Smart search that auto-detects the pattern type
     pub fn search_auto(&self, index: &FileIndex, query: &str) -> Result<Vec<PathBuf>> {
         let mode = self.detect_search_mode(query);
-        
+
         match mode {
             SearchMode::Regex => self.search_regex(index, query),
             SearchMode::Glob => self.search_glob(index, query),
             SearchMode::Substring => Ok(self.search_substring(index, query)),
-            SearchMode::Fuzzy => Ok(self.search_fuzzy(index, query).into_iter().map(|(path, _)| path).collect()),
+            SearchMode::Fuzzy => Ok(self
+                .search_fuzzy(index, query)
+                .into_iter()
+                .map(|(path, _)| path)
+                .collect()),
         }
     }
 
     /// Smart search with mode information returned
-    pub fn search_auto_with_mode(&self, index: &FileIndex, query: &str) -> Result<(Vec<PathBuf>, SearchMode)> {
+    pub fn search_auto_with_mode(
+        &self,
+        index: &FileIndex,
+        query: &str,
+    ) -> Result<(Vec<PathBuf>, SearchMode)> {
         let mode = self.detect_search_mode(query);
         let results = match mode {
             SearchMode::Regex => self.search_regex(index, query)?,
             SearchMode::Glob => self.search_glob(index, query)?,
             SearchMode::Substring => self.search_substring(index, query),
-            SearchMode::Fuzzy => self.search_fuzzy(index, query).into_iter().map(|(path, _)| path).collect(),
+            SearchMode::Fuzzy => self
+                .search_fuzzy(index, query)
+                .into_iter()
+                .map(|(path, _)| path)
+                .collect(),
         };
-        
+
         Ok((results, mode))
     }
 
+    /// Search using substring matching
     pub fn search_substring(&self, index: &FileIndex, query: &str) -> Vec<PathBuf> {
         let search_query = if self.config.case_sensitive {
             query.to_string()
@@ -166,6 +188,7 @@ impl SearchEngine {
         results
     }
 
+    /// Search using regular expressions
     pub fn search_regex(&self, index: &FileIndex, pattern: &str) -> Result<Vec<PathBuf>> {
         let flags = if self.config.case_sensitive {
             ""
@@ -188,6 +211,7 @@ impl SearchEngine {
         Ok(results)
     }
 
+    /// Search using glob patterns
     pub fn search_glob(&self, index: &FileIndex, pattern: &str) -> Result<Vec<PathBuf>> {
         let glob_pattern = if self.config.case_sensitive {
             Pattern::new(pattern)?
@@ -214,6 +238,7 @@ impl SearchEngine {
         Ok(results)
     }
 
+    /// Search using fuzzy matching with typo tolerance
     pub fn search_fuzzy(&self, index: &FileIndex, query: &str) -> Vec<(PathBuf, f64)> {
         let mut scored_results = Vec::new();
 
@@ -236,7 +261,7 @@ impl SearchEngine {
         } else {
             filename.to_lowercase()
         };
-        
+
         let query_lower = if self.config.case_sensitive {
             query.to_string()
         } else {
@@ -250,17 +275,21 @@ impl SearchEngine {
 
         // Substring match
         if filename_lower.contains(&query_lower) {
-            return 0.9 - (filename_lower.len() as f64 - query_lower.len() as f64) / filename_lower.len() as f64 * 0.1;
+            return 0.9
+                - (filename_lower.len() as f64 - query_lower.len() as f64)
+                    / filename_lower.len() as f64
+                    * 0.1;
         }
 
         // Calculate multiple scoring methods and combine them
         let levenshtein_score = self.levenshtein_score(&filename_lower, &query_lower);
         let subsequence_score = self.subsequence_score(&filename_lower, &query_lower);
         let ngram_score = self.ngram_score(&filename_lower, &query_lower);
-        
+
         // Combine scores with weights
-        let combined_score = (levenshtein_score * 0.4) + (subsequence_score * 0.4) + (ngram_score * 0.2);
-        
+        let combined_score =
+            (levenshtein_score * 0.4) + (subsequence_score * 0.4) + (ngram_score * 0.2);
+
         // Only return meaningful scores
         if combined_score < 0.3 {
             0.0
@@ -272,7 +301,7 @@ impl SearchEngine {
     fn levenshtein_score(&self, s1: &str, s2: &str) -> f64 {
         let len1 = s1.chars().count();
         let len2 = s2.chars().count();
-        
+
         if len1 == 0 {
             return if len2 == 0 { 1.0 } else { 0.0 };
         }
@@ -282,7 +311,7 @@ impl SearchEngine {
 
         let chars1: Vec<char> = s1.chars().collect();
         let chars2: Vec<char> = s2.chars().collect();
-        
+
         let mut prev_row: Vec<usize> = (0..=len2).collect();
         let mut curr_row = vec![0; len2 + 1];
 
@@ -300,7 +329,7 @@ impl SearchEngine {
 
         let distance = prev_row[len2];
         let max_len = std::cmp::max(len1, len2);
-        
+
         if max_len == 0 {
             1.0
         } else {
@@ -311,11 +340,11 @@ impl SearchEngine {
     fn subsequence_score(&self, filename: &str, query: &str) -> f64 {
         let filename_chars: Vec<char> = filename.chars().collect();
         let query_chars: Vec<char> = query.chars().collect();
-        
+
         if query_chars.is_empty() {
             return 1.0;
         }
-        
+
         let mut query_idx = 0;
         let mut consecutive = 0;
         let mut max_consecutive = 0;
@@ -336,7 +365,7 @@ impl SearchEngine {
             let coverage = score / filename_chars.len() as f64;
             let completeness = query_idx as f64 / query_chars.len() as f64;
             let consecutiveness = max_consecutive as f64 / query_chars.len() as f64;
-            
+
             (coverage * 0.4) + (completeness * 0.4) + (consecutiveness * 0.2)
         } else {
             0.0
@@ -345,10 +374,10 @@ impl SearchEngine {
 
     fn ngram_score(&self, s1: &str, s2: &str) -> f64 {
         const N: usize = 2; // bigrams
-        
+
         let ngrams1 = self.get_ngrams(s1, N);
         let ngrams2 = self.get_ngrams(s2, N);
-        
+
         if ngrams1.is_empty() && ngrams2.is_empty() {
             return 1.0;
         }
@@ -372,7 +401,7 @@ impl SearchEngine {
         if chars.len() < n {
             return vec![s.to_string()];
         }
-        
+
         chars
             .windows(n)
             .map(|window| window.iter().collect())

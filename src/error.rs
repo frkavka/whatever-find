@@ -65,9 +65,19 @@ pub enum FileSearchError {
 impl fmt::Display for FileSearchError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Io { source, context, path } => {
+            Self::Io {
+                source,
+                context,
+                path,
+            } => {
                 if let Some(path) = path {
-                    write!(f, "IO error in {}: {} (path: {})", context, source, path.display())
+                    write!(
+                        f,
+                        "IO error in {}: {} (path: {})",
+                        context,
+                        source,
+                        path.display()
+                    )
                 } else {
                     write!(f, "IO error in {}: {}", context, source)
                 }
@@ -79,7 +89,12 @@ impl fmt::Display for FileSearchError {
                 write!(f, "Invalid glob pattern '{}': {}", pattern, source)
             }
             Self::WalkDir { source, root_path } => {
-                write!(f, "Directory traversal error in '{}': {}", root_path.display(), source)
+                write!(
+                    f,
+                    "Directory traversal error in '{}': {}",
+                    root_path.display(),
+                    source
+                )
             }
             Self::EmptyIndex { path } => {
                 write!(f, "Search index is empty for path: {}", path.display())
@@ -104,8 +119,8 @@ impl std::error::Error for FileSearchError {
             Self::InvalidRegex { source, .. } => Some(source),
             Self::InvalidGlob { source, .. } => Some(source),
             Self::WalkDir { source, .. } => Some(source),
-            Self::EmptyIndex { .. } 
-            | Self::InvalidQuery { .. } 
+            Self::EmptyIndex { .. }
+            | Self::InvalidQuery { .. }
             | Self::InvalidPath { .. }
             | Self::InvalidConfig { .. } => None,
         }
@@ -162,9 +177,7 @@ impl FileSearchError {
 
     /// Create an empty index error
     pub fn empty_index<P: Into<PathBuf>>(path: P) -> Self {
-        Self::EmptyIndex {
-            path: path.into(),
-        }
+        Self::EmptyIndex { path: path.into() }
     }
 
     /// Create an invalid query error

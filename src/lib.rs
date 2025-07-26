@@ -14,12 +14,12 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use file_search::{FileSearcher, SearchMode};
+//! use whatever_find::{FileSearcher, SearchMode};
 //! use std::path::Path;
 //!
 //! let searcher = FileSearcher::new();
 //! let results = searcher.search_auto(Path::new("."), "*.rs").unwrap();
-//! 
+//!
 //! for file in results {
 //!     println!("{}", file.display());
 //! }
@@ -39,12 +39,12 @@
 //!
 //! ### Basic Usage
 //!
-//! ```rust
-//! use file_search::FileSearcher;
+//! ```ignore
+//! use whatever_find::FileSearcher;
 //! use std::path::Path;
 //!
 //! let searcher = FileSearcher::new();
-//! 
+//!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Auto-detection (recommended)
 //! let rs_files = searcher.search_auto(Path::new("."), "*.rs")?;
@@ -56,12 +56,12 @@
 //!
 //! ### Manual Mode Selection
 //!
-//! ```rust
-//! use file_search::{FileSearcher, SearchMode};
+//! ```ignore
+//! use whatever_find::{FileSearcher, SearchMode};
 //! use std::path::Path;
 //!
 //! let searcher = FileSearcher::new();
-//! 
+//!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Force specific search modes
 //! let files = searcher.search(Path::new("."), "config", SearchMode::Substring)?;
@@ -73,16 +73,16 @@
 //!
 //! ### Fuzzy Search
 //!
-//! ```rust
-//! use file_search::{FileSearcher, SearchMode};
+//! ```ignore
+//! use whatever_find::{FileSearcher, SearchMode};
 //! use std::path::Path;
 //!
 //! let searcher = FileSearcher::new();
-//! 
+//!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Fuzzy search returns scored results
 //! let scored_results = searcher.search_fuzzy(Path::new("."), "mian")?; // finds "main"
-//! 
+//!
 //! for (file, score) in scored_results {
 //!     println!("{} (score: {:.2})", file.display(), score);
 //! }
@@ -93,7 +93,7 @@
 //! ### Builder Pattern
 //!
 //! ```rust
-//! use file_search::FileSearcher;
+//! use whatever_find::FileSearcher;
 //! use std::path::Path;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -118,12 +118,12 @@
 
 /// Configuration management for file search operations
 pub mod config;
+/// Error types and handling
+pub mod error;
 /// File system indexing functionality
 pub mod indexer;
 /// Search engine implementation with various modes
 pub mod search;
-/// Error types and handling
-pub mod error;
 
 use std::path::{Path, PathBuf};
 
@@ -137,7 +137,7 @@ pub type Result<T> = std::result::Result<T, crate::error::FileSearchError>;
 /// # Examples
 ///
 /// ```rust
-/// use file_search::FileSearcherBuilder;
+/// use whatever_find::FileSearcherBuilder;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let searcher = FileSearcherBuilder::new()
@@ -177,7 +177,7 @@ impl FileSearcherBuilder {
     ///
     /// # Examples
     /// ```rust
-    /// use file_search::FileSearcherBuilder;
+    /// use whatever_find::FileSearcherBuilder;
     ///
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let searcher = FileSearcherBuilder::new()
@@ -222,7 +222,7 @@ impl FileSearcherBuilder {
     ///
     /// # Examples
     /// ```rust
-    /// use file_search::FileSearcherBuilder;
+    /// use whatever_find::FileSearcherBuilder;
     ///
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let searcher = FileSearcherBuilder::new()
@@ -247,7 +247,9 @@ impl FileSearcherBuilder {
         I: IntoIterator<Item = S>,
         S: Into<String>,
     {
-        self.config.ignore_patterns.extend(patterns.into_iter().map(Into::into));
+        self.config
+            .ignore_patterns
+            .extend(patterns.into_iter().map(Into::into));
         self
     }
 
@@ -306,7 +308,7 @@ impl FileSearcherBuilder {
         for pattern in &self.config.ignore_patterns {
             if pattern.is_empty() {
                 return Err(crate::error::FileSearchError::invalid_config(
-                    "ignore patterns cannot be empty"
+                    "ignore patterns cannot be empty",
                 ));
             }
         }
@@ -348,7 +350,7 @@ impl FileSearcher {
     /// # Examples
     ///
     /// ```rust
-    /// use file_search::FileSearcher;
+    /// use whatever_find::FileSearcher;
     ///
     /// let searcher = FileSearcher::new();
     /// ```
@@ -363,7 +365,7 @@ impl FileSearcher {
     /// # Examples
     ///
     /// ```rust
-    /// use file_search::FileSearcher;
+    /// use whatever_find::FileSearcher;
     ///
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let searcher = FileSearcher::builder()
@@ -383,7 +385,7 @@ impl FileSearcher {
     /// # Examples
     ///
     /// ```rust
-    /// use file_search::{FileSearcher, Config};
+    /// use whatever_find::{FileSearcher, Config};
     ///
     /// let config = Config {
     ///     case_sensitive: true,
@@ -416,8 +418,8 @@ impl FileSearcher {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use file_search::FileSearcher;
+    /// ```ignore
+    /// use whatever_find::FileSearcher;
     /// use std::path::Path;
     ///
     /// let searcher = FileSearcher::new();
@@ -428,8 +430,10 @@ impl FileSearcher {
     /// ```
     pub fn search_auto(&self, root_path: &Path, query: &str) -> Result<Vec<PathBuf>> {
         let mut indexer = crate::indexer::FileIndexer::new(self.config.clone());
-        let index = indexer.build_index(root_path.to_str().ok_or_else(|| crate::error::FileSearchError::invalid_path(root_path, "Contains invalid UTF-8"))?)?;
-        
+        let index = indexer.build_index(root_path.to_str().ok_or_else(|| {
+            crate::error::FileSearchError::invalid_path(root_path, "Contains invalid UTF-8")
+        })?)?;
+
         let search_engine = crate::search::SearchEngine::new(self.config.clone());
         search_engine.search_auto(&index, query)
     }
@@ -445,8 +449,8 @@ impl FileSearcher {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use file_search::{FileSearcher, SearchMode};
+    /// ```ignore
+    /// use whatever_find::{FileSearcher, SearchMode};
     /// use std::path::Path;
     ///
     /// let searcher = FileSearcher::new();
@@ -456,10 +460,16 @@ impl FileSearcher {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn search_auto_with_mode(&self, root_path: &Path, query: &str) -> Result<(Vec<PathBuf>, crate::search::SearchMode)> {
+    pub fn search_auto_with_mode(
+        &self,
+        root_path: &Path,
+        query: &str,
+    ) -> Result<(Vec<PathBuf>, crate::search::SearchMode)> {
         let mut indexer = crate::indexer::FileIndexer::new(self.config.clone());
-        let index = indexer.build_index(root_path.to_str().ok_or_else(|| crate::error::FileSearchError::invalid_path(root_path, "Contains invalid UTF-8"))?)?;
-        
+        let index = indexer.build_index(root_path.to_str().ok_or_else(|| {
+            crate::error::FileSearchError::invalid_path(root_path, "Contains invalid UTF-8")
+        })?)?;
+
         let search_engine = crate::search::SearchEngine::new(self.config.clone());
         search_engine.search_auto_with_mode(&index, query)
     }
@@ -476,8 +486,8 @@ impl FileSearcher {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use file_search::{FileSearcher, SearchMode};
+    /// ```ignore
+    /// use whatever_find::{FileSearcher, SearchMode};
     /// use std::path::Path;
     ///
     /// let searcher = FileSearcher::new();
@@ -486,17 +496,30 @@ impl FileSearcher {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn search(&self, root_path: &Path, query: &str, mode: crate::search::SearchMode) -> Result<Vec<PathBuf>> {
+    pub fn search(
+        &self,
+        root_path: &Path,
+        query: &str,
+        mode: crate::search::SearchMode,
+    ) -> Result<Vec<PathBuf>> {
         let mut indexer = crate::indexer::FileIndexer::new(self.config.clone());
-        let index = indexer.build_index(root_path.to_str().ok_or_else(|| crate::error::FileSearchError::invalid_path(root_path, "Contains invalid UTF-8"))?)?;
-        
+        let index = indexer.build_index(root_path.to_str().ok_or_else(|| {
+            crate::error::FileSearchError::invalid_path(root_path, "Contains invalid UTF-8")
+        })?)?;
+
         let search_engine = crate::search::SearchEngine::new(self.config.clone());
-        
+
         match mode {
-            crate::search::SearchMode::Substring => Ok(search_engine.search_substring(&index, query)),
+            crate::search::SearchMode::Substring => {
+                Ok(search_engine.search_substring(&index, query))
+            }
             crate::search::SearchMode::Glob => search_engine.search_glob(&index, query),
             crate::search::SearchMode::Regex => search_engine.search_regex(&index, query),
-            crate::search::SearchMode::Fuzzy => Ok(search_engine.search_fuzzy(&index, query).into_iter().map(|(path, _)| path).collect()),
+            crate::search::SearchMode::Fuzzy => Ok(search_engine
+                .search_fuzzy(&index, query)
+                .into_iter()
+                .map(|(path, _)| path)
+                .collect()),
         }
     }
 
@@ -510,14 +533,14 @@ impl FileSearcher {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use file_search::FileSearcher;
+    /// ```ignore
+    /// use whatever_find::FileSearcher;
     /// use std::path::Path;
     ///
     /// let searcher = FileSearcher::new();
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let results = searcher.search_fuzzy(Path::new("."), "mian")?; // finds "main"
-    /// 
+    ///
     /// for (file, score) in results {
     ///     println!("{} (score: {:.2})", file.display(), score);
     /// }
@@ -526,8 +549,10 @@ impl FileSearcher {
     /// ```
     pub fn search_fuzzy(&self, root_path: &Path, query: &str) -> Result<Vec<(PathBuf, f64)>> {
         let mut indexer = crate::indexer::FileIndexer::new(self.config.clone());
-        let index = indexer.build_index(root_path.to_str().ok_or_else(|| crate::error::FileSearchError::invalid_path(root_path, "Contains invalid UTF-8"))?)?;
-        
+        let index = indexer.build_index(root_path.to_str().ok_or_else(|| {
+            crate::error::FileSearchError::invalid_path(root_path, "Contains invalid UTF-8")
+        })?)?;
+
         let search_engine = crate::search::SearchEngine::new(self.config.clone());
         Ok(search_engine.search_fuzzy(&index, query))
     }
@@ -566,54 +591,67 @@ impl FileSearcher {
         let searcher = self.clone();
         let root_path = root_path.to_path_buf();
         let query = query.to_string();
-        
-        tokio::task::spawn_blocking(move || {
-            searcher.search_auto(&root_path, &query)
-        }).await.map_err(|e| crate::error::FileSearchError::invalid_config(
-            format!("Async task failed: {}", e)
-        ))?
+
+        tokio::task::spawn_blocking(move || searcher.search_auto(&root_path, &query))
+            .await
+            .map_err(|e| {
+                crate::error::FileSearchError::invalid_config(format!("Async task failed: {}", e))
+            })?
     }
 
     /// Asynchronous version of `search_auto_with_mode`
     #[cfg(feature = "async")]
-    pub async fn search_auto_with_mode_async(&self, root_path: &Path, query: &str) -> Result<(Vec<PathBuf>, crate::search::SearchMode)> {
+    pub async fn search_auto_with_mode_async(
+        &self,
+        root_path: &Path,
+        query: &str,
+    ) -> Result<(Vec<PathBuf>, crate::search::SearchMode)> {
         let searcher = self.clone();
         let root_path = root_path.to_path_buf();
         let query = query.to_string();
-        
-        tokio::task::spawn_blocking(move || {
-            searcher.search_auto_with_mode(&root_path, &query)
-        }).await.map_err(|e| crate::error::FileSearchError::invalid_config(
-            format!("Async task failed: {}", e)
-        ))?
+
+        tokio::task::spawn_blocking(move || searcher.search_auto_with_mode(&root_path, &query))
+            .await
+            .map_err(|e| {
+                crate::error::FileSearchError::invalid_config(format!("Async task failed: {}", e))
+            })?
     }
 
     /// Asynchronous version of `search`
     #[cfg(feature = "async")]
-    pub async fn search_async(&self, root_path: &Path, query: &str, mode: crate::search::SearchMode) -> Result<Vec<PathBuf>> {
+    pub async fn search_async(
+        &self,
+        root_path: &Path,
+        query: &str,
+        mode: crate::search::SearchMode,
+    ) -> Result<Vec<PathBuf>> {
         let searcher = self.clone();
         let root_path = root_path.to_path_buf();
         let query = query.to_string();
-        
-        tokio::task::spawn_blocking(move || {
-            searcher.search(&root_path, &query, mode)
-        }).await.map_err(|e| crate::error::FileSearchError::invalid_config(
-            format!("Async task failed: {}", e)
-        ))?
+
+        tokio::task::spawn_blocking(move || searcher.search(&root_path, &query, mode))
+            .await
+            .map_err(|e| {
+                crate::error::FileSearchError::invalid_config(format!("Async task failed: {}", e))
+            })?
     }
 
     /// Asynchronous version of `search_fuzzy`
     #[cfg(feature = "async")]
-    pub async fn search_fuzzy_async(&self, root_path: &Path, query: &str) -> Result<Vec<(PathBuf, f64)>> {
+    pub async fn search_fuzzy_async(
+        &self,
+        root_path: &Path,
+        query: &str,
+    ) -> Result<Vec<(PathBuf, f64)>> {
         let searcher = self.clone();
         let root_path = root_path.to_path_buf();
         let query = query.to_string();
-        
-        tokio::task::spawn_blocking(move || {
-            searcher.search_fuzzy(&root_path, &query)
-        }).await.map_err(|e| crate::error::FileSearchError::invalid_config(
-            format!("Async task failed: {}", e)
-        ))?
+
+        tokio::task::spawn_blocking(move || searcher.search_fuzzy(&root_path, &query))
+            .await
+            .map_err(|e| {
+                crate::error::FileSearchError::invalid_config(format!("Async task failed: {}", e))
+            })?
     }
 }
 
@@ -627,10 +665,10 @@ impl Clone for FileSearcher {
 }
 
 // Re-export commonly used types
-pub use crate::indexer::FileIndex;
-pub use crate::search::SearchMode;
 pub use crate::config::Config;
 pub use crate::error::FileSearchError;
+pub use crate::indexer::FileIndex;
+pub use crate::search::SearchMode;
 
 // FileSearcherBuilder is already defined in this module, no need to re-export
 
@@ -649,12 +687,12 @@ mod tests {
         fs::write(root.join("lib.rs"), "pub mod lib;").unwrap();
         fs::write(root.join("config.toml"), "[config]").unwrap();
         fs::write(root.join("README.md"), "# Test").unwrap();
-        
+
         // Create subdirectory
         fs::create_dir(root.join("src")).unwrap();
         fs::write(root.join("src").join("test.rs"), "test code").unwrap();
         fs::write(root.join("src").join("helper.rs"), "helper code").unwrap();
-        
+
         // Create hidden file
         fs::write(root.join(".hidden"), "hidden content").unwrap();
 
@@ -675,28 +713,41 @@ mod tests {
     fn test_basic_search() {
         let temp_dir = create_test_structure();
         let searcher = FileSearcher::with_config(test_config());
-        
+
         let results = searcher.search_auto(temp_dir.path(), "*.rs").unwrap();
         // Should find main.rs, lib.rs, src/test.rs, src/helper.rs
-        assert!(results.len() >= 4, "Expected at least 4 .rs files, found {}", results.len());
+        assert!(
+            results.len() >= 4,
+            "Expected at least 4 .rs files, found {}",
+            results.len()
+        );
     }
 
     #[test]
     fn test_substring_search() {
         let temp_dir = create_test_structure();
         let searcher = FileSearcher::with_config(test_config());
-        
-        let results = searcher.search(temp_dir.path(), "main", SearchMode::Substring).unwrap();
+
+        let results = searcher
+            .search(temp_dir.path(), "main", SearchMode::Substring)
+            .unwrap();
         assert_eq!(results.len(), 1);
-        assert!(results[0].file_name().unwrap().to_str().unwrap().contains("main"));
+        assert!(results[0]
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .contains("main"));
     }
 
     #[test]
     fn test_glob_search() {
         let temp_dir = create_test_structure();
         let searcher = FileSearcher::with_config(test_config());
-        
-        let results = searcher.search(temp_dir.path(), "*.rs", SearchMode::Glob).unwrap();
+
+        let results = searcher
+            .search(temp_dir.path(), "*.rs", SearchMode::Glob)
+            .unwrap();
         assert!(results.len() >= 4);
     }
 
@@ -704,8 +755,10 @@ mod tests {
     fn test_regex_search() {
         let temp_dir = create_test_structure();
         let searcher = FileSearcher::with_config(test_config());
-        
-        let results = searcher.search(temp_dir.path(), r".*\.rs$", SearchMode::Regex).unwrap();
+
+        let results = searcher
+            .search(temp_dir.path(), r".*\.rs$", SearchMode::Regex)
+            .unwrap();
         assert!(results.len() >= 4);
     }
 
@@ -713,19 +766,19 @@ mod tests {
     fn test_fuzzy_search() {
         let temp_dir = create_test_structure();
         let searcher = FileSearcher::with_config(test_config());
-        
+
         let results = searcher.search_fuzzy(temp_dir.path(), "man").unwrap(); // should find "main"
         assert!(!results.is_empty());
-        
+
         // Check that results are scored
         for (_, score) in &results {
             assert!(*score >= 0.0 && *score <= 1.0);
         }
-        
+
         // Verify we found main.rs
-        let found_main = results.iter().any(|(path, _)| {
-            path.file_name().unwrap().to_str().unwrap() == "main.rs"
-        });
+        let found_main = results
+            .iter()
+            .any(|(path, _)| path.file_name().unwrap().to_str().unwrap() == "main.rs");
         assert!(found_main, "Should find main.rs with fuzzy search 'man'");
     }
 
@@ -733,19 +786,25 @@ mod tests {
     fn test_auto_detection() {
         let temp_dir = create_test_structure();
         let searcher = FileSearcher::with_config(test_config());
-        
+
         // Should detect as glob
-        let (results, mode) = searcher.search_auto_with_mode(temp_dir.path(), "*.rs").unwrap();
+        let (results, mode) = searcher
+            .search_auto_with_mode(temp_dir.path(), "*.rs")
+            .unwrap();
         assert_eq!(mode, SearchMode::Glob);
         assert!(results.len() >= 4);
-        
+
         // Should detect as regex
-        let (results, mode) = searcher.search_auto_with_mode(temp_dir.path(), r"\.rs$").unwrap();
+        let (results, mode) = searcher
+            .search_auto_with_mode(temp_dir.path(), r"\.rs$")
+            .unwrap();
         assert_eq!(mode, SearchMode::Regex);
         assert!(results.len() >= 4);
-        
+
         // Should detect as substring
-        let (results, mode) = searcher.search_auto_with_mode(temp_dir.path(), "main").unwrap();
+        let (results, mode) = searcher
+            .search_auto_with_mode(temp_dir.path(), "main")
+            .unwrap();
         assert_eq!(mode, SearchMode::Substring);
         assert_eq!(results.len(), 1);
     }
@@ -753,7 +812,7 @@ mod tests {
     #[test]
     fn test_builder_pattern() {
         let temp_dir = create_test_structure();
-        
+
         // Test that the builder pattern works
         let searcher = FileSearcher::builder()
             .ignore_hidden(false)
@@ -761,7 +820,7 @@ mod tests {
             .case_sensitive(false)
             .build()
             .unwrap();
-        
+
         let results = searcher.search_auto(temp_dir.path(), "*.rs").unwrap();
         // Should find all .rs files with builder configuration
         assert!(results.len() >= 4, "Builder pattern should work correctly");
@@ -770,28 +829,32 @@ mod tests {
     #[test]
     fn test_ignore_patterns() {
         let temp_dir = create_test_structure();
-        
+
         let searcher = FileSearcher::builder()
             .ignore_hidden(false)
             .clear_ignore_patterns() // Clear defaults first
             .ignore_pattern("*.md")
             .build()
             .unwrap();
-        
+
         let results = searcher.search_auto(temp_dir.path(), "*").unwrap();
         // Should not include README.md
-        assert!(!results.iter().any(|p| p.file_name().unwrap().to_str().unwrap().ends_with(".md")));
+        assert!(!results
+            .iter()
+            .any(|p| p.file_name().unwrap().to_str().unwrap().ends_with(".md")));
     }
 
     #[test]
     fn test_case_sensitivity() {
         let temp_dir = create_test_structure();
-        
+
         // Case insensitive (default)
         let searcher = FileSearcher::with_config(test_config());
-        let results = searcher.search(temp_dir.path(), "MAIN", SearchMode::Substring).unwrap();
+        let results = searcher
+            .search(temp_dir.path(), "MAIN", SearchMode::Substring)
+            .unwrap();
         assert_eq!(results.len(), 1);
-        
+
         // Case sensitive
         let searcher = FileSearcher::builder()
             .ignore_hidden(false)
@@ -799,24 +862,22 @@ mod tests {
             .case_sensitive(true)
             .build()
             .unwrap();
-        let results = searcher.search(temp_dir.path(), "MAIN", SearchMode::Substring).unwrap();
+        let results = searcher
+            .search(temp_dir.path(), "MAIN", SearchMode::Substring)
+            .unwrap();
         assert_eq!(results.len(), 0);
     }
 
     #[test]
     fn test_builder_validation() {
         // Test invalid max_depth
-        let result = FileSearcher::builder()
-            .max_depth(0)
-            .build();
+        let result = FileSearcher::builder().max_depth(0).build();
         assert!(result.is_err());
-        
+
         // Test invalid max_file_size
-        let result = FileSearcher::builder()
-            .max_file_size(0)
-            .build();
+        let result = FileSearcher::builder().max_file_size(0).build();
         assert!(result.is_err());
-        
+
         // Test empty ignore pattern
         let mut builder = FileSearcher::builder();
         builder.config.ignore_patterns.push(String::new());
@@ -827,11 +888,11 @@ mod tests {
     #[test]
     fn test_error_handling() {
         let searcher = FileSearcher::with_config(test_config());
-        
+
         // Test with non-existent path
         let result = searcher.search_auto(Path::new("/non/existent/path"), "*.rs");
         assert!(result.is_err());
-        
+
         // Test with invalid regex
         let temp_dir = create_test_structure();
         let result = searcher.search(temp_dir.path(), "[invalid", SearchMode::Regex);
@@ -843,8 +904,11 @@ mod tests {
     async fn test_async_search() {
         let temp_dir = create_test_structure();
         let searcher = FileSearcher::with_config(test_config());
-        
-        let results = searcher.search_auto_async(temp_dir.path(), "*.rs").await.unwrap();
+
+        let results = searcher
+            .search_auto_async(temp_dir.path(), "*.rs")
+            .await
+            .unwrap();
         assert!(results.len() >= 4);
     }
 }

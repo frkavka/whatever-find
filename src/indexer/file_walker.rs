@@ -1,19 +1,22 @@
 use crate::config::Config;
-use std::path::Path;
-use walkdir::{WalkDir, DirEntry};
 use crate::Result;
+use std::path::Path;
+use walkdir::{DirEntry, WalkDir};
 
+/// File system walker that respects configuration settings
 pub struct FileWalker {
     config: Config,
 }
 
 impl FileWalker {
+    /// Create a new file walker with the given configuration
     pub fn new(config: &Config) -> Self {
         Self {
             config: config.clone(),
         }
     }
 
+    /// Walk the file system starting from root_path, respecting configuration
     pub fn walk(&self, root_path: &str) -> Result<Vec<walkdir::Result<DirEntry>>> {
         let mut walker = WalkDir::new(root_path);
 
@@ -60,9 +63,6 @@ impl FileWalker {
         false
     }
 
-    fn should_skip_entry(&self, entry: &DirEntry) -> bool {
-        Self::should_skip_entry_with_config(entry, &self.config)
-    }
 
     fn matches_pattern(path: &Path, pattern: &str) -> bool {
         if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {

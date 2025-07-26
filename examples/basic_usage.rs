@@ -1,7 +1,7 @@
 //! Basic usage example for the file-search library
 
-use whatever_find::{FileSearcher, SearchMode};
 use std::path::Path;
+use whatever_find::{FileSearcher, SearchMode};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let searcher = FileSearcher::new();
@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 1: Auto-detection
     println!("1. Auto-detection examples:");
-    
+
     // This will be detected as glob
     let (results, mode) = searcher.search_auto_with_mode(search_path, "*.rs")?;
     println!("   Query: '*.rs' -> Detected as: {:?}", mode);
@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 2: Manual mode selection
     println!("2. Manual mode selection:");
-    
+
     let results = searcher.search(search_path, "src", SearchMode::Substring)?;
     println!("   Substring search for 'src': {} files", results.len());
 
@@ -45,7 +45,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let fuzzy_results = searcher.search_fuzzy(search_path, "cargp")?; // Typo in "cargo"
     println!("   Fuzzy search for 'cargp' (typo in 'cargo'):");
     for (file, score) in fuzzy_results.iter().take(5) {
-        println!("     {} (score: {:.2})", file.file_name().unwrap().to_string_lossy(), score);
+        println!(
+            "     {} (score: {:.2})",
+            file.file_name().unwrap().to_string_lossy(),
+            score
+        );
     }
 
     println!();
