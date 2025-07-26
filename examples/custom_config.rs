@@ -1,6 +1,6 @@
 //! Example showing how to use custom configuration
 
-use file_search::{FileSearcher, Config};
+use whatever_find::{FileSearcher, Config};
 use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,6 +1,6 @@
 //! Basic usage example for the file-search library
 
-use file_search::{FileSearcher, SearchMode};
+use whatever_find::{FileSearcher, SearchMode};
 use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
