@@ -6,3 +6,5 @@
 
   インタラクティブモード：
   cargo run --features cli -- --interactive "*.rs"
+
+** 勉強用 **
