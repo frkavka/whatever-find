@@ -63,7 +63,6 @@ impl FileWalker {
         false
     }
 
-
     fn matches_pattern(path: &Path, pattern: &str) -> bool {
         if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
             if pattern.contains('*') {

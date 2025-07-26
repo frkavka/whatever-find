@@ -44,16 +44,19 @@ impl Config {
     #[cfg(feature = "config")]
     pub fn load_from_file(path: &PathBuf) -> crate::Result<Self> {
         let content = std::fs::read_to_string(path)?;
-        let config: Config = serde_json::from_str(&content).map_err(|e| {
-            crate::FileSearchError::InvalidConfig(format!("Config parse error: {}", e))
-        })?;
+        let config: Config =
+            serde_json::from_str(&content).map_err(|e| crate::FileSearchError::InvalidConfig {
+                reason: format!("Config serialize error: {}", e),
+            })?;
         Ok(config)
     }
 
     #[cfg(feature = "config")]
     pub fn save_to_file(&self, path: &PathBuf) -> crate::Result<()> {
         let content = serde_json::to_string_pretty(self).map_err(|e| {
-            crate::FileSearchError::InvalidConfig(format!("Config serialize error: {}", e))
+            crate::FileSearchError::InvalidConfig {
+                reason: format!("Config serialize error: {}", e),
+            }
         })?;
         std::fs::write(path, content)?;
         Ok(())
