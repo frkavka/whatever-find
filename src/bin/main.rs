@@ -275,15 +275,14 @@ fn open_in_explorer(file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error
         let parent = file_path.parent().unwrap_or(Path::new("."));
 
         for fm in &file_managers {
-            if let Ok(mut cmd) = std::process::Command::new(fm) {
-                if fm == &"xdg-open" {
-                    cmd.arg(parent);
-                } else {
-                    cmd.arg("--select").arg(file_path);
-                }
-                if cmd.spawn().is_ok() {
-                    break;
-                }
+            let mut cmd = std::process::Command::new(fm);
+            if fm == &"xdg-open" {
+                cmd.arg(parent);
+            } else {
+                cmd.arg("--select").arg(file_path);
+            }
+            if cmd.spawn().is_ok() {
+                break;
             }
         }
     }

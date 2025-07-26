@@ -558,6 +558,7 @@ impl FileSearcher {
     }
 
     /// Gets the current configuration
+    #[must_use]
     pub fn config(&self) -> &crate::config::Config {
         &self.config
     }
@@ -595,7 +596,7 @@ impl FileSearcher {
         tokio::task::spawn_blocking(move || searcher.search_auto(&root_path, &query))
             .await
             .map_err(|e| {
-                crate::error::FileSearchError::invalid_config(format!("Async task failed: {}", e))
+                crate::error::FileSearchError::invalid_config(format!("Async task failed: {e}"))
             })?
     }
 
@@ -613,7 +614,7 @@ impl FileSearcher {
         tokio::task::spawn_blocking(move || searcher.search_auto_with_mode(&root_path, &query))
             .await
             .map_err(|e| {
-                crate::error::FileSearchError::invalid_config(format!("Async task failed: {}", e))
+                crate::error::FileSearchError::invalid_config(format!("Async task failed: {e}"))
             })?
     }
 
@@ -632,7 +633,7 @@ impl FileSearcher {
         tokio::task::spawn_blocking(move || searcher.search(&root_path, &query, mode))
             .await
             .map_err(|e| {
-                crate::error::FileSearchError::invalid_config(format!("Async task failed: {}", e))
+                crate::error::FileSearchError::invalid_config(format!("Async task failed: {e}"))
             })?
     }
 
@@ -650,7 +651,7 @@ impl FileSearcher {
         tokio::task::spawn_blocking(move || searcher.search_fuzzy(&root_path, &query))
             .await
             .map_err(|e| {
-                crate::error::FileSearchError::invalid_config(format!("Async task failed: {}", e))
+                crate::error::FileSearchError::invalid_config(format!("Async task failed: {e}"))
             })?
     }
 }
@@ -841,7 +842,7 @@ mod tests {
         // Should not include README.md
         assert!(!results
             .iter()
-            .any(|p| p.file_name().unwrap().to_str().unwrap().ends_with(".md")));
+            .any(|p| p.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("md"))));
     }
 
     #[test]

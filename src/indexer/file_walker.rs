@@ -10,13 +10,14 @@ pub struct FileWalker {
 
 impl FileWalker {
     /// Create a new file walker with the given configuration
+    #[must_use]
     pub fn new(config: &Config) -> Self {
         Self {
             config: config.clone(),
         }
     }
 
-    /// Walk the file system starting from root_path, respecting configuration
+    /// Walk the file system starting from `root_path`, respecting configuration
     pub fn walk(&self, root_path: &str) -> Result<Vec<walkdir::Result<DirEntry>>> {
         let mut walker = WalkDir::new(root_path);
 

@@ -1,10 +1,8 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use file_search::config::Config;
-use file_search::indexer::FileIndexer;
-use file_search::search::SearchEngine;
-use std::collections::HashMap;
+use whatever_find::config::Config;
+use whatever_find::indexer::FileIndexer;
+use whatever_find::search::SearchEngine;
 use std::fs;
-use std::path::PathBuf;
 use tempfile::TempDir;
 
 fn create_test_files(dir: &TempDir, count: usize) -> Result<(), std::io::Error> {

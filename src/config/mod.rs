@@ -1,3 +1,4 @@
+/// Configuration settings management
 #[cfg(feature = "config")]
 pub mod settings;
 
@@ -41,21 +42,31 @@ impl Default for Config {
 }
 
 impl Config {
+    /// Load configuration from a JSON file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be read or parsed
     #[cfg(feature = "config")]
     pub fn load_from_file(path: &PathBuf) -> crate::Result<Self> {
         let content = std::fs::read_to_string(path)?;
         let config: Config =
             serde_json::from_str(&content).map_err(|e| crate::FileSearchError::InvalidConfig {
-                reason: format!("Config serialize error: {}", e),
+                reason: format!("Config serialize error: {e}"),
             })?;
         Ok(config)
     }
 
+    /// Save configuration to a JSON file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be written or serialized
     #[cfg(feature = "config")]
     pub fn save_to_file(&self, path: &PathBuf) -> crate::Result<()> {
         let content = serde_json::to_string_pretty(self).map_err(|e| {
             crate::FileSearchError::InvalidConfig {
-                reason: format!("Config serialize error: {}", e),
+                reason: format!("Config serialize error: {e}"),
             }
         })?;
         std::fs::write(path, content)?;

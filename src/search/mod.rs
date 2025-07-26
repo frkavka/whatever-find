@@ -239,6 +239,10 @@ impl SearchEngine {
     }
 
     /// Search using fuzzy matching with typo tolerance
+    ///
+    /// # Panics
+    ///
+    /// This function does not panic under normal circumstances
     pub fn search_fuzzy(&self, index: &FileIndex, query: &str) -> Vec<(PathBuf, f64)> {
         let mut scored_results = Vec::new();
 

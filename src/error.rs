@@ -29,7 +29,7 @@ pub enum FileSearchError {
         /// The pattern that failed to compile
         pattern: String,
     },
-    /// WalkDir error during directory traversal
+    /// `WalkDir` error during directory traversal
     WalkDir {
         /// The walkdir error
         source: walkdir::Error,
@@ -79,14 +79,14 @@ impl fmt::Display for FileSearchError {
                         path.display()
                     )
                 } else {
-                    write!(f, "IO error in {}: {}", context, source)
+                    write!(f, "IO error in {context}: {source}")
                 }
             }
             Self::InvalidRegex { source, pattern } => {
-                write!(f, "Invalid regex pattern '{}': {}", pattern, source)
+                write!(f, "Invalid regex pattern '{pattern}': {source}")
             }
             Self::InvalidGlob { source, pattern } => {
-                write!(f, "Invalid glob pattern '{}': {}", pattern, source)
+                write!(f, "Invalid glob pattern '{pattern}': {source}")
             }
             Self::WalkDir { source, root_path } => {
                 write!(
@@ -100,13 +100,13 @@ impl fmt::Display for FileSearchError {
                 write!(f, "Search index is empty for path: {}", path.display())
             }
             Self::InvalidQuery { reason, query } => {
-                write!(f, "Invalid search query '{}': {}", query, reason)
+                write!(f, "Invalid search query '{query}': {reason}")
             }
             Self::InvalidPath { path, reason } => {
                 write!(f, "Invalid path '{}': {}", path.display(), reason)
             }
             Self::InvalidConfig { reason } => {
-                write!(f, "Invalid configuration: {}", reason)
+                write!(f, "Invalid configuration: {reason}")
             }
         }
     }

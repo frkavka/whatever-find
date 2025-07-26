@@ -1,12 +1,18 @@
 use super::Config;
 use std::path::PathBuf;
 
+/// Configuration manager for handling persistent settings
 pub struct ConfigManager {
     config_path: PathBuf,
     config: Config,
 }
 
 impl ConfigManager {
+    /// Create a new configuration manager
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an error if the config directory cannot be determined
     #[cfg(feature = "config")]
     pub fn new() -> crate::Result<Self> {
         let config_path = Self::default_config_path()?;
@@ -22,10 +28,17 @@ impl ConfigManager {
         })
     }
 
+    /// Get the current configuration
+    #[must_use]
     pub fn config(&self) -> &Config {
         &self.config
     }
 
+    /// Save the configuration to file
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an error if the file cannot be written
     #[cfg(feature = "config")]
     pub fn save(&self) -> crate::Result<()> {
         if let Some(parent) = self.config_path.parent() {

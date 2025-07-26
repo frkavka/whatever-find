@@ -31,9 +31,13 @@ impl Matcher {
     }
 
     /// Create a new regex matcher with a pre-compiled pattern
+    ///
+    /// # Errors
+    ///
+    /// Returns a regex error if the pattern is invalid
     pub fn with_regex(pattern: &str, case_sensitive: bool) -> Result<Self, regex::Error> {
         let flags = if case_sensitive { "" } else { "(?i)" };
-        let full_pattern = format!("{}{}", flags, pattern);
+        let full_pattern = format!("{flags}{pattern}");
         let regex = Regex::new(&full_pattern)?;
 
         Ok(Self {
