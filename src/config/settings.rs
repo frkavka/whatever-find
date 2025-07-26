@@ -9,9 +9,9 @@ pub struct ConfigManager {
 
 impl ConfigManager {
     /// Create a new configuration manager
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns an error if the config directory cannot be determined
     #[cfg(feature = "config")]
     pub fn new() -> crate::Result<Self> {
@@ -35,9 +35,9 @@ impl ConfigManager {
     }
 
     /// Save the configuration to file
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns an error if the file cannot be written
     #[cfg(feature = "config")]
     pub fn save(&self) -> crate::Result<()> {

@@ -1,9 +1,9 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use std::fs;
+use tempfile::TempDir;
 use whatever_find::config::Config;
 use whatever_find::indexer::FileIndexer;
 use whatever_find::search::SearchEngine;
-use std::fs;
-use tempfile::TempDir;
 
 fn create_test_files(dir: &TempDir, count: usize) -> Result<(), std::io::Error> {
     for i in 0..count {

@@ -840,9 +840,9 @@ mod tests {
 
         let results = searcher.search_auto(temp_dir.path(), "*").unwrap();
         // Should not include README.md
-        assert!(!results
-            .iter()
-            .any(|p| p.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("md"))));
+        assert!(!results.iter().any(|p| p
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))));
     }
 
     #[test]
